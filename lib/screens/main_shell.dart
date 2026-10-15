@@ -6,6 +6,7 @@ import '../providers/course_provider.dart';
 import 'courses_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
+import 'favorites_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -19,6 +20,7 @@ class _MainShellState extends State<MainShell> {
   static const _items = [
     (Icons.home_outlined, Icons.home, 'Home'),
     (Icons.school_outlined, Icons.school, 'Courses'),
+    (Icons.favorite_border, Icons.favorite, 'Favorit'),
     (Icons.person_outline, Icons.person, 'Profile'),
   ];
 
@@ -63,9 +65,10 @@ class _MainShellState extends State<MainShell> {
       );
     }
 
-    final pages = [
+        final pages = [
       HomePage(student: student, courses: courses),
       CoursesPage(courses: courses),
+      FavoritesPage(courses: courses),
       ProfilePage(student: student),
     ];
 

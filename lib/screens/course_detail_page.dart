@@ -5,6 +5,8 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/common.dart';
 
+// TAHAP 13: status favorit tampil di halaman detail (state dari CourseProvider)
+// Nama: Theresia Darius | NIM: 2415051116
 class CourseDetailPage extends StatelessWidget {
   final Course course;
   const CourseDetailPage({super.key, required this.course});
@@ -16,7 +18,8 @@ class CourseDetailPage extends StatelessWidget {
 
     Widget row(IconData icon, String title, String value) => ListTile(
           leading: Icon(icon, color: Colors.indigo),
-          title: Text(title, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+          title: Text(title,
+              style: const TextStyle(fontSize: 13, color: Colors.grey)),
           subtitle: Text(value,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         );
@@ -35,6 +38,7 @@ class CourseDetailPage extends StatelessWidget {
               Wrap(spacing: 6, children: [
                 Tag(course.code, Colors.indigo),
                 Tag(label, color),
+                if (isFav) const Tag('Favorit', Colors.red),
               ]),
             ]),
           ),
@@ -52,7 +56,8 @@ class CourseDetailPage extends StatelessWidget {
             style: TextStyle(color: Colors.grey, fontSize: 12)),
         const SizedBox(height: 16),
         FilledButton.icon(
-          onPressed: () => context.read<CourseProvider>().toggleFavorite(course.code),
+          onPressed: () =>
+              context.read<CourseProvider>().toggleFavorite(course.code),
           icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
           label: Text(isFav ? 'Hapus dari Favorit' : 'Tandai Favorit'),
         ),
