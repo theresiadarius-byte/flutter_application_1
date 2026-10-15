@@ -122,9 +122,7 @@ class _MainShellState extends State<MainShell> {
                       ],
                     ),
                     const VerticalDivider(thickness: 1, width: 1),
-                    Expanded(
-                      child: SafeArea(child: pages[_selectedIndex]),
-                    ),
+                    Expanded(child: SafeArea(child: pages[_selectedIndex])),
                   ],
                 ),
               );
@@ -227,9 +225,8 @@ class HomePage extends StatelessWidget {
 
           Text(
             'Ringkasan Pembelajaran',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
@@ -274,6 +271,8 @@ class HomePage extends StatelessWidget {
               }
             },
           ),
+          const SizedBox(height: 16),
+          const DetailToggle(),
         ],
       ),
     );
@@ -305,10 +304,8 @@ class CoursesPage extends StatelessWidget {
         children: [
           Text(
             'Daftar Mata Kuliah',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.indigo,
-                ),
+            style: Theme.of(context).textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.indigo),
           ),
           const SizedBox(height: 12),
 
@@ -319,10 +316,15 @@ class CoursesPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dimensi Layar: ${size.width.toStringAsFixed(0)} x ${size.height.toStringAsFixed(0)} px (${orientation.name})'),
+                  Text(
+                    'Dimensi Layar: ${size.width.toStringAsFixed(0)} x ${size.height.toStringAsFixed(0)} px (${orientation.name})',
+                  ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: isCompact ? Colors.orange : Colors.green,
                       borderRadius: BorderRadius.circular(4),
@@ -401,16 +403,14 @@ class ProfilePage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     name,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'NIM: $nim',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey[700],
-                        ),
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(color: Colors.grey[700]),
                   ),
                   const Divider(height: 32),
                   const ListTile(
@@ -429,10 +429,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          FeedbackFormSection(
-            studentName: name,
-            studentId: nim,
-          ),
+          FeedbackFormSection(studentName: name, studentId: nim),
         ],
       ),
     );
@@ -546,9 +543,9 @@ class _FeedbackFormSectionState extends State<FeedbackFormSection> {
               Text(
                 'Form Feedback & Masukan',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -665,9 +662,8 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(title),
@@ -782,20 +778,32 @@ class _CourseCardState extends State<CourseCard> {
                         runSpacing: 2.0,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.indigo.shade50,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(code, style: const TextStyle(fontSize: 11)),
+                            child: Text(
+                              code,
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.orange.shade50,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text('$credits SKS', style: const TextStyle(fontSize: 11)),
+                            child: Text(
+                              '$credits SKS',
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ),
                         ],
                       ),
@@ -894,7 +902,8 @@ class CourseDetailPage extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.indigo,
                           ),
@@ -945,6 +954,43 @@ class CourseDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// LOCAL STATE DEMO (Tahap 1)
+class DetailToggle extends StatefulWidget {
+  const DetailToggle({super.key});
+
+  @override
+  State<DetailToggle> createState() => _DetailToggleState();
+}
+
+class _DetailToggleState extends State<DetailToggle> {
+  bool _showDetail = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.person, color: Colors.indigo),
+            title: const Text('Info Mahasiswa'),
+            trailing: Icon(_showDetail ? Icons.expand_less : Icons.expand_more),
+            onTap: () {
+              setState(() {
+                _showDetail = !_showDetail;
+              });
+            },
+          ),
+          if (_showDetail)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text('$studentId - $studentName'),
+            ),
+        ],
       ),
     );
   }
