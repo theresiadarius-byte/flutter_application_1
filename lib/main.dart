@@ -280,6 +280,8 @@ class HomePage extends StatelessWidget {
             favorites: favorites,
             onToggle: onToggleFavorite,
           ),
+          const SizedBox(height: 16),
+            ValueNotifierDemo(initialFavorites: favorites.length),
         ],
       ),
     );
@@ -1045,5 +1047,92 @@ class FavoriteCountChild extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text('Total favorit: ${favorites.length} | $studentId - $studentName');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAHAP 4: ValueNotifier + ValueListenableBuilder
+// Nama: Theresia Darius | NIM: 2415051116
+// -----------------------------------------------------------------------------
+class ValueNotifierDemo extends StatefulWidget {
+  final int initialFavorites;
+  const ValueNotifierDemo({super.key, required this.initialFavorites});
+
+  @override
+  State<ValueNotifierDemo> createState() => _ValueNotifierDemoState();
+}
+
+class _ValueNotifierDemoState extends State<ValueNotifierDemo> {
+  late final ValueNotifier<int> favoriteCount;
+  int setStateCount = 0;
+  int parentBuilds = 0;
+  int builderBuilds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    favoriteCount = ValueNotifier<int>(widget.initialFavorites);
+  }
+
+  @override
+  void dispose() {
+    favoriteCount.dispose(); // wajib: lepas notifier
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    parentBuilds++;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tahap 4: ValueNotifier',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('$studentId - $studentName',
+                style: const TextStyle(fontSize: 12)),
+            const Divider(),
+
+            // Pola 1: ValueNotifier -> hanya builder ini yang rebuild
+            ValueListenableBuilder<int>(
+              valueListenable: favoriteCount,
+              builder: (context, value, child) {
+                builderBuilds++;
+                return Text(
+                    'ValueNotifier: $value (builder dibuild $builderBuilds x)');
+              },
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () {
+                    if (favoriteCount.value > 0) favoriteCount.value--;
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => favoriteCount.value++,
+                ),
+              ],
+            ),
+            const Divider(),
+
+            // Pola 2: setState -> seluruh widget ini rebuild
+            Text('setState: $setStateCount'),
+            ElevatedButton(
+              onPressed: () => setState(() => setStateCount++),
+              child: const Text('Tambah (setState)'),
+            ),
+            const SizedBox(height: 8),
+            Text('Parent dibuild: $parentBuilds x',
+                style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
   }
 }
