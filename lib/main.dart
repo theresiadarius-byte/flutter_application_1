@@ -10,7 +10,9 @@ const String studentId = '2415051116';
 
 // TAHAP 6: Provider di root | Nama: Theresia Darius | NIM: 2415051116
 void main() => runApp(ChangeNotifierProvider(
-    create: (_) => CourseProvider(), child: const MyApp()));
+    create: (_) =>
+        CourseProvider(CourseRepository(CourseService()))..loadCourses(),
+    child: const MyApp()));
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -84,16 +86,6 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int index = 0;
-  late final Future<(Map<String, dynamic>, List<Course>)> future = _load();
-
-  // TAHAP 9: data hanya lewat CourseService (UI tidak memanggil rootBundle)
-  Future<(Map<String, dynamic>, List<Course>)> _load() async {
-    final repository = CourseRepository(CourseService());
-    final student = await repository.getStudent();
-    final courses = await repository.getCourses();
-    debugPrint('[$studentId] CourseRepository memuat ${courses.length} course');
-    return (student, courses);
-  }
 
   static const _items = [
     (Icons.home_outlined, Icons.home, 'Home'),
@@ -103,79 +95,107 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<(Map<String, dynamic>, List<Course>)>(
-      future: future,
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        if (snap.hasError || !snap.hasData) {
-          return const Scaffold(
-              body: Center(child: Text('Gagal memuat data course')));
-        }
-        final (student, courses) = snap.data!;
-        final pages = [
-          HomePage(student: student, courses: courses),
-          CoursesPage(courses: courses),
-          ProfilePage(student: student),
-        ];
+    // TAHAP 11: select() hanya rebuild saat bagian ini berubah, bukan saat favorit berubah
+    final isLoading = context.select<CourseProvider, bool>((p) => p.isLoading);
+    final error = context.select<CourseProvider, String?>((p) => p.error);
+    final courses = context.select<CourseProvider, List<Course>>((p) => p.courses);
+    final student =
+        context.select<CourseProvider, Map<String, dynamic>>((p) => p.student);
 
-        return LayoutBuilder(builder: (context, c) {
-          final wide = c.maxWidth >= 840;
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(wide ? 'Course Explorer - Web/Tablet' : 'Course Explorer'),
-              actions: [
-                // TAHAP 7: Consumer hanya membangun ulang badge kecil ini
-                Consumer<CourseProvider>(builder: (_, cs, __) {
-                  debugPrint('[$studentId] build Consumer badge AppBar');
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Row(children: [
-                      const Icon(Icons.favorite, size: 20, color: Colors.redAccent),
-                      const SizedBox(width: 4),
-                      Text('${cs.favoriteCount}',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ]),
-                  );
-                }),
-              ],
-            ),
-            body: wide
-                ? Row(children: [
-                    NavigationRail(
-                      selectedIndex: index,
-                      onDestinationSelected: (i) => setState(() => index = i),
-                      labelType: NavigationRailLabelType.all,
-                      destinations: [
-                        for (final e in _items)
-                          NavigationRailDestination(
-                              icon: Icon(e.$1),
-                              selectedIcon: Icon(e.$2),
-                              label: Text(e.$3)),
-                      ],
-                    ),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: SafeArea(child: pages[index])),
-                  ])
-                : SafeArea(child: pages[index]),
-            bottomNavigationBar: wide
-                ? null
-                : NavigationBar(
-                    selectedIndex: index,
-                    onDestinationSelected: (i) => setState(() => index = i),
-                    destinations: [
-                      for (final e in _items)
-                        NavigationDestination(
-                            icon: Icon(e.$1),
-                            selectedIcon: Icon(e.$2),
-                            label: e.$3),
-                    ],
-                  ),
-          );
-        });
-      },
-    );
+    // state Loading
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    // state Error
+    if (error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Course Explorer')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 12),
+              const Text('Gagal memuat data course',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text(error,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 4),
+              const Text('$studentId - $studentName',
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => context.read<CourseProvider>().loadCourses(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Coba Lagi'),
+              ),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    // state Success
+    final pages = [
+      HomePage(student: student, courses: courses),
+      CoursesPage(courses: courses),
+      ProfilePage(student: student),
+    ];
+
+    return LayoutBuilder(builder: (context, c) {
+      final wide = c.maxWidth >= 840;
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(wide ? 'Course Explorer - Web/Tablet' : 'Course Explorer'),
+          actions: [
+            Consumer<CourseProvider>(builder: (_, cs, __) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Row(children: [
+                  const Icon(Icons.favorite, size: 20, color: Colors.redAccent),
+                  const SizedBox(width: 4),
+                  Text('${cs.favoriteCount}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                ]),
+              );
+            }),
+          ],
+        ),
+        body: wide
+            ? Row(children: [
+                NavigationRail(
+                  selectedIndex: index,
+                  onDestinationSelected: (i) => setState(() => index = i),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    for (final e in _items)
+                      NavigationRailDestination(
+                          icon: Icon(e.$1),
+                          selectedIcon: Icon(e.$2),
+                          label: Text(e.$3)),
+                  ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: SafeArea(child: pages[index])),
+              ])
+            : SafeArea(child: pages[index]),
+        bottomNavigationBar: wide
+            ? null
+            : NavigationBar(
+                selectedIndex: index,
+                onDestinationSelected: (i) => setState(() => index = i),
+                destinations: [
+                  for (final e in _items)
+                    NavigationDestination(
+                        icon: Icon(e.$1),
+                        selectedIcon: Icon(e.$2),
+                        label: e.$3),
+                ],
+              ),
+      );
+    });
   }
 }
 

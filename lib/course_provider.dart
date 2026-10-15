@@ -1,12 +1,40 @@
 import 'package:flutter/foundation.dart';
+import 'models/course.dart';
+import 'repositories/course_repository.dart';
 
+// TAHAP 5 + 11: state favorit dan async state (loading, error, data)
 // Nama: Theresia Darius | NIM: 2415051116
 class CourseProvider extends ChangeNotifier {
-  final Set<String> _favorites = {};
+  final CourseRepository repository;
+  CourseProvider(this.repository);
 
+  // --- data async (Tahap 11) ---
+  Map<String, dynamic> student = {};
+  List<Course> courses = [];
+  bool isLoading = false;
+  String? error;
+
+  Future<void> loadCourses() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+    try {
+      student = await repository.getStudent();
+      courses = await repository.getCourses();
+      debugPrint('CourseProvider memuat ${courses.length} course');
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+  
+
+  // --- favorit (Tahap 5) ---
+  final Set<String> _favorites = {};
   Set<String> get favorites => Set.unmodifiable(_favorites);
   int get favoriteCount => _favorites.length;
-
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
