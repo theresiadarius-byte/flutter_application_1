@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
 import 'services/course_service.dart';
+import 'repositories/course_repository.dart';
 
 const String studentName = 'Theresia Darius';
 const String studentId = '2415051116';
@@ -87,10 +88,10 @@ class _MainShellState extends State<MainShell> {
 
   // TAHAP 9: data hanya lewat CourseService (UI tidak memanggil rootBundle)
   Future<(Map<String, dynamic>, List<Course>)> _load() async {
-    final service = CourseService();
-    final student = await service.loadStudent();
-    final courses = await service.loadCourses();
-    debugPrint('[$studentId] CourseService memuat ${courses.length} course');
+    final repository = CourseRepository(CourseService());
+    final student = await repository.getStudent();
+    final courses = await repository.getCourses();
+    debugPrint('[$studentId] CourseRepository memuat ${courses.length} course');
     return (student, courses);
   }
 
