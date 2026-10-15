@@ -273,6 +273,8 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const DetailToggle(),
+          const SizedBox(height: 16),
+          FavoriteDemoParent(courses: courses),
         ],
       ),
     );
@@ -992,6 +994,135 @@ class _DetailToggleState extends State<DetailToggle> {
             ),
         ],
       ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAHAP 2: MASALAH setState UNTUK SHARED STATE
+// -----------------------------------------------------------------------------
+
+// Parent: pemilik state favorites
+class FavoriteDemoParent extends StatefulWidget {
+  final List<dynamic> courses;
+
+  const FavoriteDemoParent({super.key, required this.courses});
+
+  @override
+  State<FavoriteDemoParent> createState() => _FavoriteDemoParentState();
+}
+
+class _FavoriteDemoParentState extends State<FavoriteDemoParent> {
+  final Set<String> _favorites = {};
+
+  void _toggleFavorite(String code) {
+    setState(() {
+      if (_favorites.contains(code)) {
+        _favorites.remove(code);
+      } else {
+        _favorites.add(code);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tahap 2: Favorit (setState di parent)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            // Child 1 (lewat perantara FavoritePanel)
+            FavoritePanel(
+              courses: widget.courses,
+              favorites: _favorites,
+              onToggle: _toggleFavorite,
+            ),
+            const Divider(),
+            // Child 2
+            FavoriteCountChild(favorites: _favorites),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Perantara: hanya meneruskan data (contoh prop drilling)
+class FavoritePanel extends StatelessWidget {
+  final List<dynamic> courses;
+  final Set<String> favorites;
+  final void Function(String code) onToggle;
+
+  const FavoritePanel({
+    super.key,
+    required this.courses,
+    required this.favorites,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FavoriteListChild(
+      courses: courses,
+      favorites: favorites,
+      onToggle: onToggle,
+    );
+  }
+}
+
+// Child 1: daftar course dengan tombol favorit
+class FavoriteListChild extends StatelessWidget {
+  final List<dynamic> courses;
+  final Set<String> favorites;
+  final void Function(String code) onToggle;
+
+  const FavoriteListChild({
+    super.key,
+    required this.courses,
+    required this.favorites,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: courses.map((c) {
+        final code = c['code'] as String;
+        final title = c['title'] as String;
+        final isFav = favorites.contains(code);
+        return ListTile(
+          dense: true,
+          title: Text(title),
+          trailing: IconButton(
+            icon: Icon(
+              isFav ? Icons.favorite : Icons.favorite_border,
+              color: isFav ? Colors.red : Colors.grey,
+            ),
+            onPressed: () => onToggle(code),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// Child 2: menampilkan jumlah favorit
+class FavoriteCountChild extends StatelessWidget {
+  final Set<String> favorites;
+
+  const FavoriteCountChild({super.key, required this.favorites});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Total favorit: ${favorites.length} | $studentId - $studentName',
     );
   }
 }
