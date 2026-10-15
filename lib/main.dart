@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'course_provider.dart';
+import 'package:provider/provider.dart';
 
 // Identitas Mahasiswa
 const String studentName = 'Theresia Darius';
@@ -12,7 +13,15 @@ Future<Map<String, dynamic>> loadStudentData() async {
   return jsonDecode(jsonString) as Map<String, dynamic>;
 }
 
-void main() => runApp(const MyApp());
+// Nama: Theresia Darius | NIM: 2415051116
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -45,12 +54,13 @@ class _MainShellState extends State<MainShell> {
   int selectedIndex = 0;
   late Future<Map<String, dynamic>> studentFuture;
 
-  // TAHAP 5: state dipindah ke ChangeNotifier
-  final CourseProvider courseState = CourseProvider();
+  // TAHAP 6: ambil instance dari Provider, bukan membuat sendiri
+  late final CourseProvider courseState;
 
   @override
   void initState() {
     super.initState();
+    courseState = context.read<CourseProvider>();
     studentFuture = loadStudentData();
   }
 
