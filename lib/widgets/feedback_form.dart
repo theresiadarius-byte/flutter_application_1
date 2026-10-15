@@ -41,9 +41,9 @@ class _FeedbackFormState extends State<FeedbackForm> {
       ),
     );
     if (ok != true) return;
-    setState(() => loading = true);
+        setState(() => loading = true);
     await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+    // if (!mounted) return;   // sengaja dimatikan
     setState(() => loading = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Feedback dari ${nameC.text} berhasil disimpan!'),

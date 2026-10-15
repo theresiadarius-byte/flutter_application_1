@@ -4,10 +4,12 @@ import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import 'courses_page.dart';
+import 'favorites_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
-import 'favorites_page.dart';
 
+// TAHAP 14: integrasi Course Explorer v2
+// Nama: Theresia Darius | NIM: 2415051116
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
   @override
@@ -28,16 +30,20 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final isLoading = context.select<CourseProvider, bool>((p) => p.isLoading);
     final error = context.select<CourseProvider, String?>((p) => p.error);
-    final courses = context.select<CourseProvider, List<Course>>((p) => p.courses);
+    final courses =
+        context.select<CourseProvider, List<Course>>((p) => p.courses);
     final student =
         context.select<CourseProvider, Map<String, dynamic>>((p) => p.student);
 
+    // state Loading
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    // state Error
     if (error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Course Explorer')),
+        appBar: AppBar(title: const Text('Course Explorer v2')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -65,7 +71,8 @@ class _MainShellState extends State<MainShell> {
       );
     }
 
-        final pages = [
+    // state Success
+    final pages = [
       HomePage(student: student, courses: courses),
       CoursesPage(courses: courses),
       FavoritesPage(courses: courses),
@@ -76,8 +83,20 @@ class _MainShellState extends State<MainShell> {
       final wide = c.maxWidth >= 840;
       return Scaffold(
         appBar: AppBar(
-          title: Text(wide ? 'Course Explorer - Web/Tablet' : 'Course Explorer'),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  wide
+                      ? 'Course Explorer v2 - Web/Tablet'
+                      : 'Course Explorer v2',
+                  style: const TextStyle(fontSize: 18)),
+              const Text('$studentId - $studentName',
+                  style: TextStyle(fontSize: 11, color: Colors.white70)),
+            ],
+          ),
           actions: [
+            // Consumer: hanya badge kecil ini yang rebuild saat favorit berubah
             Consumer<CourseProvider>(builder: (_, cs, __) {
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
