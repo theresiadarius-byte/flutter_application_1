@@ -1,3 +1,5 @@
+// TAHAP 8: Model Course
+// Nama: Theresia Darius | NIM: 2415051116
 class Course {
   final String code;
   final String title;
