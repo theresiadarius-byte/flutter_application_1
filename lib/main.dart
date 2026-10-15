@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'course_provider.dart';
 
 // Identitas Mahasiswa
 const String studentName = 'Theresia Darius';
@@ -44,19 +45,8 @@ class _MainShellState extends State<MainShell> {
   int selectedIndex = 0;
   late Future<Map<String, dynamic>> studentFuture;
 
-  // TAHAP 3: single source of truth untuk favorit
-  // Nama: Theresia Darius | NIM: 2415051116
-  final Set<String> favorites = {};
-
-  void toggleFavorite(String code) {
-    setState(() {
-      if (favorites.contains(code)) {
-        favorites.remove(code);
-      } else {
-        favorites.add(code);
-      }
-    });
-  }
+  // TAHAP 5: state dipindah ke ChangeNotifier
+  final CourseProvider courseState = CourseProvider();
 
   @override
   void initState() {
@@ -65,110 +55,123 @@ class _MainShellState extends State<MainShell> {
   }
 
   @override
+  void dispose() {
+    courseState.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: studentFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        if (snapshot.hasError || !snapshot.hasData) {
-          return const Scaffold(
-              body: Center(child: Text('Gagal memuat data course')));
-        }
-
-        final data = snapshot.data!;
-        final student = data['student'] as Map<String, dynamic>;
-        final courses = data['courses'] as List<dynamic>;
-
-        final List<Widget> pages = [
-          HomePage(
-            student: student,
-            courses: courses,
-            favorites: favorites,
-            onToggleFavorite: toggleFavorite,
-          ),
-          CoursesPage(
-            student: student,
-            courses: courses,
-            favorites: favorites,
-            onToggleFavorite: toggleFavorite,
-          ),
-          ProfilePage(student: student),
-        ];
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final isExpanded = constraints.maxWidth >= 840;
-
-            if (isExpanded) {
-              return Scaffold(
-                appBar: AppBar(
-                  title: const Text('Course Explorer - Web/Tablet'),
-                  backgroundColor: Colors.indigo,
-                  foregroundColor: Colors.white,
-                ),
-                body: Row(
-                  children: [
-                    NavigationRail(
-                      selectedIndex: selectedIndex,
-                      onDestinationSelected: (index) =>
-                          setState(() => selectedIndex = index),
-                      labelType: NavigationRailLabelType.all,
-                      destinations: const [
-                        NavigationRailDestination(
-                          icon: Icon(Icons.home_outlined),
-                          selectedIcon: Icon(Icons.home),
-                          label: Text('Home'),
-                        ),
-                        NavigationRailDestination(
-                          icon: Icon(Icons.school_outlined),
-                          selectedIcon: Icon(Icons.school),
-                          label: Text('Courses'),
-                        ),
-                        NavigationRailDestination(
-                          icon: Icon(Icons.person_outline),
-                          selectedIcon: Icon(Icons.person),
-                          label: Text('Profile'),
-                        ),
-                      ],
-                    ),
-                    const VerticalDivider(thickness: 1, width: 1),
-                    Expanded(child: SafeArea(child: pages[selectedIndex])),
-                  ],
-                ),
-              );
+    // ListenableBuilder: rebuild otomatis saat notifyListeners() dipanggil
+    return ListenableBuilder(
+      listenable: courseState,
+      builder: (context, _) {
+        return FutureBuilder<Map<String, dynamic>>(
+          future: studentFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()));
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return const Scaffold(
+                  body: Center(child: Text('Gagal memuat data course')));
             }
 
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Course Explorer'),
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
+            final data = snapshot.data!;
+            final student = data['student'] as Map<String, dynamic>;
+            final courses = data['courses'] as List<dynamic>;
+
+            final List<Widget> pages = [
+              HomePage(
+                student: student,
+                courses: courses,
+                favorites: courseState.favorites,
+                onToggleFavorite: courseState.toggleFavorite,
               ),
-              body: SafeArea(child: pages[selectedIndex]),
-              bottomNavigationBar: NavigationBar(
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (index) =>
-                    setState(() => selectedIndex = index),
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.school_outlined),
-                    selectedIcon: Icon(Icons.school),
-                    label: 'Courses',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.person_outline),
-                    selectedIcon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
+              CoursesPage(
+                student: student,
+                courses: courses,
+                favorites: courseState.favorites,
+                onToggleFavorite: courseState.toggleFavorite,
               ),
+              ProfilePage(student: student),
+            ];
+
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isExpanded = constraints.maxWidth >= 840;
+
+                if (isExpanded) {
+                  return Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Course Explorer - Web/Tablet'),
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                    ),
+                    body: Row(
+                      children: [
+                        NavigationRail(
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: (index) =>
+                              setState(() => selectedIndex = index),
+                          labelType: NavigationRailLabelType.all,
+                          destinations: const [
+                            NavigationRailDestination(
+                              icon: Icon(Icons.home_outlined),
+                              selectedIcon: Icon(Icons.home),
+                              label: Text('Home'),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.school_outlined),
+                              selectedIcon: Icon(Icons.school),
+                              label: Text('Courses'),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.person_outline),
+                              selectedIcon: Icon(Icons.person),
+                              label: Text('Profile'),
+                            ),
+                          ],
+                        ),
+                        const VerticalDivider(thickness: 1, width: 1),
+                        Expanded(child: SafeArea(child: pages[selectedIndex])),
+                      ],
+                    ),
+                  );
+                }
+
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Course Explorer'),
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                  ),
+                  body: SafeArea(child: pages[selectedIndex]),
+                  bottomNavigationBar: NavigationBar(
+                    selectedIndex: selectedIndex,
+                    onDestinationSelected: (index) =>
+                        setState(() => selectedIndex = index),
+                    destinations: const [
+                      NavigationDestination(
+                        icon: Icon(Icons.home_outlined),
+                        selectedIcon: Icon(Icons.home),
+                        label: 'Home',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.school_outlined),
+                        selectedIcon: Icon(Icons.school),
+                        label: 'Courses',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.person_outline),
+                        selectedIcon: Icon(Icons.person),
+                        label: 'Profile',
+                      ),
+                    ],
+                  ),
+                );
+              },
             );
           },
         );
