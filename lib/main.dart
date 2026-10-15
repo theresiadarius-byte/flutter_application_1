@@ -1,15 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'Theresia Darius';
 const String studentId = '2415051116';
-
-Future<Map<String, dynamic>> loadStudentData() async => jsonDecode(
-    await rootBundle.loadString('assets/data/student_data.json'));
 
 // TAHAP 6: Provider di root | Nama: Theresia Darius | NIM: 2415051116
 void main() => runApp(ChangeNotifierProvider(
@@ -87,7 +83,16 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int index = 0;
-  late final Future<Map<String, dynamic>> future = loadStudentData();
+  late final Future<(Map<String, dynamic>, List<Course>)> future = _load();
+
+  // TAHAP 9: data hanya lewat CourseService (UI tidak memanggil rootBundle)
+  Future<(Map<String, dynamic>, List<Course>)> _load() async {
+    final service = CourseService();
+    final student = await service.loadStudent();
+    final courses = await service.loadCourses();
+    debugPrint('[$studentId] CourseService memuat ${courses.length} course');
+    return (student, courses);
+  }
 
   static const _items = [
     (Icons.home_outlined, Icons.home, 'Home'),
@@ -97,7 +102,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
+    return FutureBuilder<(Map<String, dynamic>, List<Course>)>(
       future: future,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
@@ -107,8 +112,7 @@ class _MainShellState extends State<MainShell> {
           return const Scaffold(
               body: Center(child: Text('Gagal memuat data course')));
         }
-        final student = snap.data!['student'] as Map<String, dynamic>;
-        final courses = snap.data!['courses'] as List<dynamic>;
+        final (student, courses) = snap.data!;
         final pages = [
           HomePage(student: student, courses: courses),
           CoursesPage(courses: courses),
@@ -177,18 +181,18 @@ class _MainShellState extends State<MainShell> {
 // ------------------------------------------------------------------ HOME
 class HomePage extends StatelessWidget {
   final Map<String, dynamic> student;
-  final List<dynamic> courses;
+  final List<Course> courses;
   const HomePage({super.key, required this.student, required this.courses});
 
   @override
   Widget build(BuildContext context) {
     // TAHAP 7: watch() -> halaman ini rebuild saat favorit berubah
     final cs = context.watch<CourseProvider>();
-    final sks = courses.fold<int>(0, (s, c) => s + (c['credits'] as int));
+    final sks = courses.fold<int>(0, (s, c) => s + c.credits);
     final name = student['name'] as String? ?? studentName;
     final nim = student['nim'] as String? ?? studentId;
-    // TAHAP 8: satu data JSON diubah menjadi object Course
-    final featured = Course.fromJson(courses.first as Map<String, dynamic>);
+    // TAHAP 8: field dibaca dari object Course
+    final featured = courses.first;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -244,9 +248,12 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 8),
         // TAHAP 4: eksperimen kecil, dilipat agar Home tetap bersih
         const Card(
+          clipBehavior: Clip.antiAlias,
           child: ExpansionTile(
+            shape: Border(),
+            collapsedShape: Border(),
             leading: Icon(Icons.science, color: Colors.indigo),
-            title: Text('Eksperimen Praktikum (Tahap 4)'),
+            title: Text('Tahap 4: ValueNotifier'),
             childrenPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
             children: [ValueNotifierDemo()],
           ),
@@ -283,13 +290,13 @@ class SummaryCard extends StatelessWidget {
 
 // TAHAP 3 + 7: daftar favorit membaca provider yang sama dengan halaman Courses
 class FavoriteChips extends StatelessWidget {
-  final List<dynamic> courses;
+  final List<Course> courses;
   const FavoriteChips({super.key, required this.courses});
 
   @override
   Widget build(BuildContext context) {
     final cs = context.watch<CourseProvider>();
-    final favs = courses.where((c) => cs.isFavorite(c['code'] as String)).toList();
+    final favs = courses.where((c) => cs.isFavorite(c.code)).toList();
     if (favs.isEmpty) {
       return const Card(
         child: ListTile(
@@ -306,9 +313,8 @@ class FavoriteChips extends StatelessWidget {
         for (final c in favs)
           InputChip(
             avatar: const Icon(Icons.favorite, color: Colors.red, size: 18),
-            label: Text('${c['title']}'),
-            onDeleted: () =>
-                context.read<CourseProvider>().toggleFavorite(c['code'] as String),
+            label: Text(c.title),
+            onDeleted: () => context.read<CourseProvider>().toggleFavorite(c.code),
           ),
       ],
     );
@@ -434,7 +440,7 @@ class _ValueNotifierDemoState extends State<ValueNotifierDemo> {
 
 // ------------------------------------------------------------------ COURSES
 class CoursesPage extends StatelessWidget {
-  final List<dynamic> courses;
+  final List<Course> courses;
   const CoursesPage({super.key, required this.courses});
 
   @override
@@ -460,14 +466,13 @@ class CoursesPage extends StatelessWidget {
               mainAxisExtent: 88),
           itemCount: courses.length,
           itemBuilder: (context, i) {
-            final c = courses[i] as Map<String, dynamic>;
-            final code = c['code'] as String;
+            final c = courses[i];
             return CourseCard(
               course: c,
-              isFavorite: cs.isFavorite(code),
+              isFavorite: cs.isFavorite(c.code),
               // TAHAP 7: read() untuk aksi, tanpa listen
               onFavoriteChanged: () =>
-                  context.read<CourseProvider>().toggleFavorite(code),
+                  context.read<CourseProvider>().toggleFavorite(c.code),
             );
           },
         ),
@@ -478,7 +483,7 @@ class CoursesPage extends StatelessWidget {
 
 // TAHAP 3: tanpa state favorit lokal, data dan aksi dari parent
 class CourseCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final bool isFavorite;
   final VoidCallback onFavoriteChanged;
   const CourseCard(
@@ -489,7 +494,7 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = statusInfo(course['status'] as String?);
+    final (label, color) = statusInfo(course.status);
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -501,22 +506,22 @@ class CourseCard extends StatelessWidget {
           child: Row(children: [
             CircleAvatar(
                 backgroundColor: color.withValues(alpha: 0.12),
-                child: Icon(statusIcon(course['status'] as String?), color: color)),
+                child: Icon(statusIcon(course.status), color: color)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${course['title']}',
+                    Text(course.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 6),
                     Wrap(spacing: 6, runSpacing: 4, children: [
-                      Tag('${course['code']}', Colors.indigo),
-                      Tag('${course['credits']} SKS', Colors.deepOrange),
+                      Tag(course.code, Colors.indigo),
+                      Tag('${course.credits} SKS', Colors.deepOrange),
                       Tag(label, color),
                     ]),
                   ]),
@@ -530,14 +535,13 @@ class CourseCard extends StatelessWidget {
 }
 
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   const CourseDetailPage({super.key, required this.course});
 
   @override
   Widget build(BuildContext context) {
-    final code = course['code'] as String;
-    final isFav = context.watch<CourseProvider>().isFavorite(code);
-    final (label, color) = statusInfo(course['status'] as String?);
+    final isFav = context.watch<CourseProvider>().isFavorite(course.code);
+    final (label, color) = statusInfo(course.status);
 
     Widget row(IconData icon, String title, String value) => ListTile(
           leading: Icon(icon, color: Colors.indigo),
@@ -553,19 +557,22 @@ class CourseDetailPage extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${course['title']}',
+              Text(course.title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold, color: Colors.indigo)),
               const SizedBox(height: 8),
-              Wrap(spacing: 6, children: [Tag(code, Colors.indigo), Tag(label, color)]),
+              Wrap(spacing: 6, children: [
+                Tag(course.code, Colors.indigo),
+                Tag(label, color),
+              ]),
             ]),
           ),
         ),
         Card(
           child: Column(children: [
-            row(Icons.code, 'Kode Mata Kuliah', code),
-            row(Icons.credit_card, 'Jumlah SKS', '${course['credits']} SKS'),
-            row(Icons.category, 'Kategori', '${course['category']}'),
+            row(Icons.code, 'Kode Mata Kuliah', course.code),
+            row(Icons.credit_card, 'Jumlah SKS', '${course.credits} SKS'),
+            row(Icons.category, 'Kategori', course.category),
           ]),
         ),
         const SizedBox(height: 8),
@@ -574,7 +581,7 @@ class CourseDetailPage extends StatelessWidget {
             style: const TextStyle(color: Colors.grey, fontSize: 12)),
         const SizedBox(height: 16),
         FilledButton.icon(
-          onPressed: () => context.read<CourseProvider>().toggleFavorite(code),
+          onPressed: () => context.read<CourseProvider>().toggleFavorite(course.code),
           icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
           label: Text(isFav ? 'Hapus dari Favorit' : 'Tandai Favorit'),
         ),
