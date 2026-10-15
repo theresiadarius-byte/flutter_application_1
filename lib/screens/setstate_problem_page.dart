@@ -36,11 +36,11 @@ class _SetStateProblemPageState extends State<SetStateProblemPage> {
       appBar: AppBar(title: const Text('Tahap 2: Masalah setState')),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
+          const Padding(
+            padding: EdgeInsets.all(8),
             child: Text(
               '$studentName - $studentId',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           // CHILD 1: daftar course (menerima data + callback)
