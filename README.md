@@ -45,3 +45,21 @@ terdaftar pada bagian `assets` di `pubspec.yaml`.
 Setiap tahap (0 sampai 17) memiliki commit sendiri. Lihat dengan:
 
     git log --oneline --graph --decorate -20
+
+    
+## Dokumentasi REST API (Tahap 1)
+
+- Endpoint: https://jsonplaceholder.typicode.com/todos
+- Method: GET
+- Status code: 200 OK
+
+Contoh struktur JSON:
+
+{
+  "userId": 1,
+  "id": 1,
+  "title": "delectus aut autem",
+  "completed": false
+}
+
+Field: userId (angka), id (angka), title (teks), completed (true/false).
