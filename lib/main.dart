@@ -5,6 +5,7 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_shell.dart';
 import 'services/course_service.dart';
+import 'temp_get_test.dart'; // SEMENTARA: Tahap 2
 
 // Nama: Theresia Darius | NIM: 2415051116
 
@@ -26,7 +27,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Course Explorer',
       theme: ThemeData(useMaterial3: true),
-      home: const MainShell(),
+      home:
+          const GetTestPage(), // SEMENTARA: nanti kembali ke const MainShell()
     );
   }
 }
