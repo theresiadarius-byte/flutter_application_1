@@ -1,87 +1,103 @@
 import 'package:flutter/material.dart';
-import '../models/course.dart';
-import 'common.dart';
 
-// CourseCard: data dan aksi (termasuk navigasi) dari parent
+import '../models/course.dart';
+
+// Nama: Theresia Darius
+// NIM: 2415051116 | Kelas: PTI 5 A
+
 class CourseCard extends StatelessWidget {
   final Course course;
+  final VoidCallback? onTap;
   final bool isFavorite;
-  final VoidCallback onFavoriteChanged;
-  final VoidCallback onTap;
+  final VoidCallback? onFavoriteTap;
+  final VoidCallback? onFavoriteChanged;
+
   const CourseCard({
     super.key,
     required this.course,
-    required this.isFavorite,
-    required this.onFavoriteChanged,
-    required this.onTap,
+    this.onTap,
+    this.isFavorite = false,
+    this.onFavoriteTap,
+    this.onFavoriteChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = statusInfo(course.status);
+    // Mendukung kedua nama callback agar kompatibel
+    // dengan halaman yang sudah ada.
+    final favoriteCallback = onFavoriteChanged ?? onFavoriteTap;
+
     return Card(
-      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
+      child: ListTile(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-          child: Row(children: [
-            CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.12),
-                child: Icon(statusIcon(course.status), color: color)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(course.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 6),
-                    Wrap(spacing: 6, runSpacing: 4, children: [
-                      Tag(course.code, Colors.indigo),
-                      Tag('${course.credits} SKS', Colors.deepOrange),
-                      Tag(label, color),
-                    ]),
-                  ]),
-            ),
-            IconButton(icon: favIcon(isFavorite), onPressed: onFavoriteChanged),
-          ]),
+        leading: CircleAvatar(
+          child: Text(
+            course.code.isNotEmpty
+                ? course.code.substring(0, 1).toUpperCase()
+                : 'C',
+          ),
         ),
+        title: Text(course.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Kode: ${course.code}'),
+              Text('SKS: ${course.credits}'),
+              const SizedBox(height: 4),
+              Chip(
+                label: Text(course.status),
+                visualDensity: VisualDensity.compact,
+              ),
+              if (course.category.isNotEmpty)
+                Text('Kategori: ${course.category}'),
+            ],
+          ),
+        ),
+        isThreeLine: true,
+        trailing: favoriteCallback == null
+            ? null
+            : IconButton(
+                tooltip: isFavorite
+                    ? 'Hapus dari favorit'
+                    : 'Tambahkan ke favorit',
+                onPressed: favoriteCallback,
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : null,
+                ),
+              ),
       ),
     );
   }
 }
 
-// TAHAP 8: membaca field object Course, bukan Map
 class CourseModelCard extends StatelessWidget {
   final Course course;
-  const CourseModelCard({super.key, required this.course});
+  final VoidCallback? onTap;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
+  final VoidCallback? onFavoriteChanged;
+
+  const CourseModelCard({
+    super.key,
+    required this.course,
+    this.onTap,
+    this.isFavorite = false,
+    this.onFavoriteTap,
+    this.onFavoriteChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = statusInfo(course.status);
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.12),
-            child: Icon(statusIcon(course.status), color: color)),
-        title: Text(course.title,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Wrap(spacing: 6, runSpacing: 4, children: [
-            Tag(course.code, Colors.indigo),
-            Tag('${course.credits} SKS', Colors.deepOrange),
-            Tag(label, color),
-          ]),
-        ),
-      ),
+    return CourseCard(
+      course: course,
+      onTap: onTap,
+      isFavorite: isFavorite,
+      onFavoriteTap: onFavoriteTap,
+      onFavoriteChanged: onFavoriteChanged,
     );
   }
 }
