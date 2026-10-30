@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'constants.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_shell.dart';
-import 'services/course_api_service.dart';
 import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 import 'supabase_config.dart';
 
 // Nama: Theresia Darius
@@ -20,7 +19,9 @@ Future<void> main() async {
 
   // service -> repository -> provider
   // TAHAP 9: hanya baris dataSource ini yang berubah saat ganti sumber data.
-  final CourseDataSource dataSource = CourseApiService(apiBaseUrl);
+  // TAHAP 12: data source aktif = Supabase.
+  // (Untuk REST: CourseApiService(apiBaseUrl) dari services/course_api_service.dart)
+  final CourseDataSource dataSource = CourseSupabaseService();
   final repository = CourseRepository(dataSource);
 
   runApp(
