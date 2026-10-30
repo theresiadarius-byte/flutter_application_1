@@ -22,7 +22,7 @@ class CourseProvider extends ChangeNotifier {
       courses = await repository.getCourses();
       debugPrint('CourseProvider memuat ${courses.length} course');
     } catch (e) {
-      error = e.toString();
+      error = e.toString().replaceFirst('Exception: ', '');
     } finally {
       isLoading = false;
       notifyListeners();

@@ -3,12 +3,13 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../widgets/error_view.dart';
 import 'courses_page.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
-// TAHAP 14: integrasi Course Explorer v2
+// TAHAP 14 & 5: integrasi Course Explorer v2 + loading/empty/error state
 // Nama: Theresia Darius | NIM: 2415051116
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -44,29 +45,33 @@ class _MainShellState extends State<MainShell> {
     if (error != null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Course Explorer v2')),
+        body: ErrorView(
+          message: error,
+          onRetry: () => context.read<CourseProvider>().loadCourses(),
+        ),
+      );
+    }
+
+    // state Empty
+    if (courses.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Course Explorer v2')),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 12),
-              const Text('Gagal memuat data course',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              Text(error,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey)),
-              const SizedBox(height: 4),
-              const Text('$studentId - $studentName',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () => context.read<CourseProvider>().loadCourses(),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Coba Lagi'),
-              ),
-            ]),
-          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text('Data course belum tersedia',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 4),
+            const Text('$studentId - $studentName',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => context.read<CourseProvider>().loadCourses(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Muat Ulang'),
+            ),
+          ]),
         ),
       );
     }
