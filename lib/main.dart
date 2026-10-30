@@ -6,13 +6,16 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_shell.dart';
 import 'services/course_api_service.dart';
+import 'services/course_data_source.dart';
 
 // Nama: Theresia Darius
 // NIM: 2415051116 | Kelas: PTI 5 A
 
 void main() {
   // service -> repository -> provider
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+  // TAHAP 9: hanya baris dataSource ini yang berubah saat ganti sumber data.
+  final CourseDataSource dataSource = CourseApiService(apiBaseUrl);
+  final repository = CourseRepository(dataSource);
 
   runApp(
     ChangeNotifierProvider(

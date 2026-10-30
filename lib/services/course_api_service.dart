@@ -4,15 +4,17 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-// TAHAP 4, 6, 7 & 8: Service Layer - seluruh komunikasi HTTP berada di sini.
+// TAHAP 4, 6, 7, 8 & 9: Service Layer - seluruh komunikasi HTTP berada di sini.
 // Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
 
   /// GET {baseUrl}/courses -> List<Course>
+  @override
   Future<List<Course>> getCourses() async {
     final uri = Uri.parse('$baseUrl/courses');
     final response = await http.get(uri);
@@ -33,6 +35,7 @@ class CourseApiService {
         .toList();
   }
 
+  @override
   Future<Course> createCourse(Course course) async {
     final uri = Uri.parse('$baseUrl/courses');
     final response = await http.post(
@@ -52,6 +55,7 @@ class CourseApiService {
   }
 
   /// TAHAP 7: PUT {baseUrl}/courses/{id} -> memperbarui course.
+  @override
   Future<void> updateCourse(int id, Course course) async {
     final uri = Uri.parse('$baseUrl/courses/$id');
     final response = await http.put(
@@ -67,6 +71,8 @@ class CourseApiService {
     }
   }
 
+  /// TAHAP 8: DELETE {baseUrl}/courses/{id} -> menghapus course.
+  @override
   Future<void> deleteCourse(int id) async {
     final uri = Uri.parse('$baseUrl/courses/$id');
     final response = await http.delete(uri);
