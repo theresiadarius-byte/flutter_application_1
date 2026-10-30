@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/course.dart';
 import 'course_data_source.dart';
 
-// TAHAP 12-14: Data source Supabase (SELECT, INSERT, UPDATE). Delete masih stub.
+// TAHAP 12-15: Data source Supabase (SELECT, INSERT, UPDATE, DELETE).
 // Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
 class CourseSupabaseService implements CourseDataSource {
   final supabase = Supabase.instance.client;
@@ -64,6 +64,18 @@ class CourseSupabaseService implements CourseDataSource {
     }
   }
 
+  // TAHAP 15: DELETE berdasarkan id. select() dipakai agar tahu apakah ada
+  // row yang benar-benar terhapus (RLS tanpa izin delete = 0 row, tanpa error).
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    try {
+      final rows =
+          await supabase.from('courses').delete().eq('id', id).select();
+      if (rows.isEmpty) {
+        throw Exception('Course tidak ditemukan atau tidak boleh dihapus');
+      }
+    } on PostgrestException catch (e) {
+      throw Exception('Gagal menghapus course: ${e.message}');
+    }
+  }
 }
