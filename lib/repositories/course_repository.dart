@@ -1,7 +1,7 @@
 import '../models/course.dart';
 import '../services/course_api_service.dart';
 
-// TAHAP 4, 6 & 7: Repository memakai CourseApiService.
+// TAHAP 4, 6, 7 & 8: Repository memakai CourseApiService.
 // Nama: Theresia Darius | NIM: 2415051116
 class CourseRepository {
   final CourseApiService service;
@@ -17,5 +17,9 @@ class CourseRepository {
 
   Future<void> updateCourse(int id, Course course) {
     return service.updateCourse(id, course);
+  }
+
+  Future<void> deleteCourse(int id) {
+    return service.deleteCourse(id);
   }
 }

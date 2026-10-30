@@ -6,12 +6,54 @@ import '../providers/course_provider.dart';
 import 'course_form_page.dart';
 import '../widgets/common.dart';
 
+// TAHAP 8: tombol Delete + dialog konfirmasi (DELETE)
 // TAHAP 7: tombol Edit membuka form edit (PUT)
 // TAHAP 13: status favorit tampil di halaman detail (state dari CourseProvider)
 // Nama: Theresia Darius | NIM: 2415051116
 class CourseDetailPage extends StatelessWidget {
   final Course course;
   const CourseDetailPage({super.key, required this.course});
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final provider = context.read<CourseProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus course?'),
+        content: Text('${course.code} - ${course.title} akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    final error = await provider.deleteCourse(course);
+
+    // Wajib setelah dialog dan await sebelum memakai context.
+    if (!context.mounted) return;
+
+    if (error == null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Course ${course.code} berhasil dihapus')),
+      );
+      Navigator.pop(context);
+    } else {
+      messenger.showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: errorColor),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +127,15 @@ class CourseDetailPage extends StatelessWidget {
               context.read<CourseProvider>().toggleFavorite(course.code),
           icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
           label: Text(isFav ? 'Hapus dari Favorit' : 'Tandai Favorit'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: course.id == null ? null : () => _confirmDelete(context),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
+          icon: const Icon(Icons.delete),
+          label: const Text('Hapus Course'),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(

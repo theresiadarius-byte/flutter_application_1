@@ -67,6 +67,27 @@ class CourseProvider extends ChangeNotifier {
     return null;
   }
 
+  /// TAHAP 8: hapus course, bersihkan dari favorites (hindari data yatim),
+  /// lalu refresh list. Mengembalikan null jika sukses, atau pesan error.
+  Future<String?> deleteCourse(Course course) async {
+    final id = course.id;
+    if (id == null) return 'Course tidak memiliki ID';
+    if (isSaving) return 'Proses sedang berjalan';
+    isSaving = true;
+    notifyListeners();
+    try {
+      await repository.deleteCourse(id);
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+    _favorites.remove(course.code);
+    await loadCourses();
+    return null;
+  }
+
   final Set<String> _favorites = {};
   Set<String> get favorites => Set.unmodifiable(_favorites);
   int get favoriteCount => _favorites.length;
