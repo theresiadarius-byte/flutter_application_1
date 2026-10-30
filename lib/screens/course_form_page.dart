@@ -6,10 +6,12 @@ import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 
-// TAHAP 6: Form tambah course (POST)
+// TAHAP 6 & 7: Form tambah (POST) dan edit (PUT) course
 // Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
 class CourseFormPage extends StatefulWidget {
-  const CourseFormPage({super.key});
+  /// null = mode tambah; terisi = mode edit.
+  final Course? course;
+  const CourseFormPage({super.key, this.course});
 
   @override
   State<CourseFormPage> createState() => _CourseFormPageState();
@@ -23,6 +25,20 @@ class _CourseFormPageState extends State<CourseFormPage> {
   final _titleCtrl = TextEditingController();
   final _creditsCtrl = TextEditingController();
   String _status = 'planned';
+
+  bool get _isEdit => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.course;
+    if (c != null) {
+      _codeCtrl.text = c.code;
+      _titleCtrl.text = c.title;
+      _creditsCtrl.text = c.credits.toString();
+      _status = _statuses.contains(c.status) ? c.status : 'planned';
+    }
+  }
 
   @override
   void dispose() {
@@ -43,18 +59,26 @@ class _CourseFormPageState extends State<CourseFormPage> {
       title: _titleCtrl.text.trim(),
       credits: int.parse(_creditsCtrl.text.trim()),
       status: _status,
+      category: widget.course?.category ?? '',
     );
 
-    final error = await provider.createCourse(course);
+    final error = _isEdit
+        ? await provider.updateCourse(widget.course!.id!, course)
+        : await provider.createCourse(course);
 
     // Wajib setelah await sebelum memakai context.
     if (!context.mounted) return;
 
     if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Course ${course.code} berhasil ditambahkan')),
+        SnackBar(
+          content: Text(
+            'Course ${course.code} berhasil '
+            '${_isEdit ? 'diperbarui' : 'ditambahkan'}',
+          ),
+        ),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -71,10 +95,10 @@ class _CourseFormPageState extends State<CourseFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tambah Course', style: TextStyle(fontSize: 18)),
+            Text(_isEdit ? 'Edit Course' : 'Tambah Course', style: TextStyle(fontSize: 18)),
             Text('$studentId - $studentName',
                 style: TextStyle(fontSize: 11, color: Colors.grey)),
           ],
@@ -90,16 +114,20 @@ class _CourseFormPageState extends State<CourseFormPage> {
               children: [
                 TextFormField(
                   controller: _codeCtrl,
+                  // code read-only saat edit (kunci favorites)
+                  readOnly: _isEdit,
                   enabled: !isSaving,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Kode course',
                     hintText: 'contoh: MOB07',
-                    border: OutlineInputBorder(),
+                    helperText: _isEdit ? 'Kode tidak dapat diubah' : null,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final value = v?.trim() ?? '';
                     if (value.isEmpty) return 'Kode wajib diisi';
+                    if (_isEdit) return null;
                     // code dipakai sebagai kunci favorites -> harus unik
                     final exists = context
                         .read<CourseProvider>()
@@ -164,7 +192,9 @@ class _CourseFormPageState extends State<CourseFormPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save),
-                  label: Text(isSaving ? 'Menyimpan...' : 'Simpan'),
+                  label: Text(isSaving
+                      ? 'Menyimpan...'
+                      : (_isEdit ? 'Simpan Perubahan' : 'Simpan')),
                 ),
               ],
             ),

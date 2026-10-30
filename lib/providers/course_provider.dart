@@ -48,6 +48,25 @@ class CourseProvider extends ChangeNotifier {
     return null;
   }
 
+  /// TAHAP 7: perbarui course lalu refresh list. Mengembalikan null jika
+  /// sukses, atau pesan error jika gagal. Favorites tetap aman karena
+  /// memakai code (yang tidak berubah) sebagai kunci.
+  Future<String?> updateCourse(int id, Course course) async {
+    if (isSaving) return 'Penyimpanan sedang berjalan';
+    isSaving = true;
+    notifyListeners();
+    try {
+      await repository.updateCourse(id, course);
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+    await loadCourses();
+    return null;
+  }
+
   final Set<String> _favorites = {};
   Set<String> get favorites => Set.unmodifiable(_favorites);
   int get favoriteCount => _favorites.length;

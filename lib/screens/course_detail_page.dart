@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import 'course_form_page.dart';
 import '../widgets/common.dart';
 
+// TAHAP 7: tombol Edit membuka form edit (PUT)
 // TAHAP 13: status favorit tampil di halaman detail (state dari CourseProvider)
 // Nama: Theresia Darius | NIM: 2415051116
 class CourseDetailPage extends StatelessWidget {
@@ -25,7 +27,30 @@ class CourseDetailPage extends StatelessWidget {
         );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Course')),
+      appBar: AppBar(
+        title: const Text('Detail Course'),
+        actions: [
+          IconButton(
+            tooltip: 'Edit course',
+            icon: const Icon(Icons.edit),
+            onPressed: course.id == null
+                ? null
+                : () async {
+                    final updated = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CourseFormPage(course: course),
+                      ),
+                    );
+                    // Data detail dikirim lewat constructor (lama), jadi
+                    // kembali ke list yang sudah di-refresh dari server.
+                    if (updated == true && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+          ),
+        ],
+      ),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: Padding(

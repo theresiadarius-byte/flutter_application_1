@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
 
-// TAHAP 4 & 6: Service Layer - seluruh komunikasi HTTP berada di sini.
+// TAHAP 4, 6 & 7: Service Layer - seluruh komunikasi HTTP berada di sini.
 // Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
 class CourseApiService {
   CourseApiService(this.baseUrl);
@@ -49,5 +49,20 @@ class CourseApiService {
       );
     }
     throw Exception('Gagal membuat course (HTTP ${response.statusCode})');
+  }
+
+  Future<void> updateCourse(int id, Course course) async {
+    final uri = Uri.parse('$baseUrl/courses/$id');
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(course.toJson()),
+    );
+
+    debugPrint('PUT $uri -> ${response.statusCode}');
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
+    }
   }
 }
