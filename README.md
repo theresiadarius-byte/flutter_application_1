@@ -1,91 +1,95 @@
-# Course Explorer v2
+# Course Data Manager
 
-Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
+Aplikasi Flutter untuk mengelola data mata kuliah (course) dengan backend **Supabase**.
+Pengembangan dari Course Explorer v2 (Pertemuan 5–6) pada praktikum Pertemuan 7:
+REST API, Backend, dan Database.
 
-Aplikasi Flutter hasil Praktikum Pertemuan 6 (State Management & Mobile
-Application Architecture). Memakai Provider dan arsitektur berlapis.
+- **Nama:** Theresia Darius
+- **NIM:** 2415051116
+- **Kelas:** PTI 5 A
 
-## Fitur
+## Deskripsi
 
-- Home, Courses, Favorit, dan Profile dengan navigasi responsif
-  (NavigationBar di layar sempit, NavigationRail di layar lebar).
-- Data course dimuat lewat Provider dengan state loading, error, dan sukses.
-- Favorit memakai satu sumber state sehingga konsisten di semua layar.
+Course Data Manager menampilkan daftar course dari database Supabase dan mendukung
+operasi CRUD lengkap:
 
-## Tanggung jawab folder (lib/)
+- **Read** – daftar course dengan state loading, empty, success, dan error (tombol coba lagi).
+- **Create** – form tambah course dengan validasi (kode unik, judul, credits angka, status).
+- **Update** – edit course dari halaman detail (kode tidak dapat diubah).
+- **Delete** – hapus course dengan dialog konfirmasi.
+- **Favorites** – tandai course favorit (kunci: kode course), konsisten di beberapa halaman.
+- **Responsive navigation** – NavigationBar (layar sempit) dan NavigationRail (layar lebar).
 
-| Folder | Tanggung jawab |
-| --- | --- |
-| `models/` | Bentuk data (`Course`) dan parsing `fromJson`. |
-| `services/` | Membaca sumber data mentah (JSON asset). Tidak mengenal UI. |
-| `repositories/` | Abstraksi data untuk provider; menyembunyikan asal data. |
-| `providers/` | State dan aksi (`CourseProvider`: courses, loading, error, favorit). Tidak menyimpan `BuildContext`. |
-| `screens/` | Halaman utuh: shell navigasi, Home, Courses, Favorit, Detail, Profile, dan halaman bukti Tahap 2. |
-| `widgets/` | Komponen UI yang dipakai ulang: kartu, tag, form, demo. |
-| `constants.dart` | Nama dan NIM mahasiswa. |
+## Backend yang Digunakan
 
-## Arah dependency
+Supabase (PostgreSQL + REST otomatis) melalui package `supabase_flutter`.
+Aplikasi hanya memakai **anon (publishable) key**. Jangan pernah menaruh `service_role`
+key di aplikasi Flutter.
 
-Screen/Widget -> Provider -> Repository -> Service -> Data (JSON)
+Tabel `courses`:
 
-Lapisan bawah tidak mengimpor lapisan di atasnya. UI tidak memanggil
-`rootBundle` atau `jsonDecode` secara langsung. Pembacaan asset hanya ada
-di `services/course_service.dart`.
+| Kolom      | Tipe                  | Keterangan                              |
+| ---------- | --------------------- | --------------------------------------- |
+| id         | bigint (identity)     | Primary key                             |
+| code       | text, unique          | Kode course                             |
+| title      | text                  | Judul course                            |
+| credits    | int                   | Jumlah SKS                              |
+| status     | text                  | `planned` / `active` / `done` (CHECK)   |
+| created_at | timestamptz           | Waktu pembuatan (default `now()`)       |
 
-## Menjalankan
+> RLS diaktifkan dengan policy permisif untuk role `anon` agar praktikum berjalan.
+> Policy ini hanya untuk laboratorium, bukan pola produksi.
 
-    flutter pub get
-    flutter run
+## Arsitektur Singkat
 
-Pastikan `assets/data/student_data.json` dan `assets/images/profile.jpg`
-terdaftar pada bagian `assets` di `pubspec.yaml`.
+Alur data: **Screen → Provider → Repository → DataSource → Backend**
 
-## Riwayat praktikum
-
-Setiap tahap (0 sampai 17) memiliki commit sendiri. Lihat dengan:
-
-    git log --oneline --graph --decorate -20
-
-    
-
-## Dokumentasi REST API (Tahap 1)
-
-### Informasi Endpoint
-- **Endpoint:** https://course-api-pearl.vercel.app/courses
-- **HTTP Method:** GET
-- **Status Code:** 200 OK
-- **Resource:** courses
-- **Format Response:** JSON berupa array objek mata kuliah.
-
-### Contoh Response JSON
-
-Salah satu objek yang ditemukan pada respons API:
-
-```json
-{
-  "id": 3,
-  "code": "MOB03",
-  "title": "Flutter Widgets & Layout",
-  "credits": 3,
-  "status": "planned",
-  "created_at": "2026-10-21T03:28:09.361747Z"
-}
+```
+lib/
+├── main.dart                        # inisialisasi Supabase + pemilihan data source aktif
+├── constants.dart                   # nama & NIM
+├── supabase_config.dart             # URL dan anon key Supabase
+├── models/course.dart               # Course.fromJson() / toJson()
+├── services/
+│   ├── course_data_source.dart      # kontrak (abstract class)
+│   ├── course_supabase_service.dart # implementasi Supabase (aktif)
+│   └── course_api_service.dart      # implementasi REST API (alternatif)
+├── repositories/course_repository.dart
+├── providers/course_provider.dart   # state: loading, error, courses, favorites
+├── screens/                         # halaman UI (tidak mengakses backend langsung)
+└── widgets/                         # komponen UI (course_card, error_view, dll.)
 ```
 
-### Field JSON
-- `id`: identitas unik mata kuliah.
-- `code`: kode mata kuliah.
-- `title`: nama mata kuliah.
-- `credits`: jumlah kredit mata kuliah.
-- `status`: status mata kuliah.
-- `created_at`: waktu pembuatan data.
+Sumber data dipilih hanya di `main.dart`:
 
-### Catatan Pengamatan
+```dart
+final CourseDataSource dataSource = CourseSupabaseService();
+// Untuk REST: CourseApiService(apiBaseUrl)
+```
 
-Endpoint `/courses` berhasil diakses menggunakan HTTP GET.
-Hasil pengujian melalui Chrome DevTools pada tab Network menunjukkan
-status code 200 OK. Response body berisi kumpulan data mata kuliah
-dalam format JSON.
+Screen, provider, dan repository tidak berubah saat berpindah antara REST dan Supabase.
 
-Screenshot pengujian endpoint dan status HTTP disiapkan sebagai
-bukti praktikum Tahap 1.
+## Cara Menjalankan
+
+1. Pastikan Flutter SDK sudah terpasang (`flutter doctor`).
+2. Clone repository dan masuk ke foldernya:
+   ```bash
+   git clone https://github.com/theresiadarius-byte/flutter_application_1.git
+   cd flutter_application_1
+   ```
+3. Pasang dependency:
+   ```bash
+   flutter pub get
+   ```
+4. Pastikan `lib/supabase_config.dart` berisi URL dan **anon key** project Supabase
+   yang memiliki tabel `courses` (lihat struktur tabel di atas).
+5. Jalankan aplikasi:
+   ```bash
+   flutter run
+   ```
+
+## Keamanan
+
+- Hanya anon key yang ada di source code; tidak ada `service_role` key, password, atau token pribadi.
+- Validasi di UI bukan pengganti validasi/otorisasi backend; keamanan sebenarnya ada di
+  constraint database dan RLS.
