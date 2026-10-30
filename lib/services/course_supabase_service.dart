@@ -3,21 +3,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/course.dart';
 import 'course_data_source.dart';
 
-// TAHAP 12-15: Data source Supabase (SELECT, INSERT, UPDATE, DELETE).
+// TAHAP 12-17: Data source Supabase (CRUD) + error handling terpusat.
 // Nama: Theresia Darius | NIM: 2415051116 | Kelas: PTI 5 A
 class CourseSupabaseService implements CourseDataSource {
   final supabase = Supabase.instance.client;
 
   @override
   Future<List<Course>> getCourses() async {
-    final data = await supabase.from('courses').select().order('id');
-    return (data as List)
-        .map((e) => Course.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final data = await supabase.from('courses').select().order('id');
+      return (data as List)
+          .map((e) => Course.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw _mapError(e);
+    }
   }
 
-  // TAHAP 13: INSERT row baru, lalu kembalikan row hasil insert sebagai Course
-  // (return type sama dengan versi REST, sehingga repository tidak berubah).
+  // TAHAP 13: INSERT, mengembalikan row baru sebagai Course.
   @override
   Future<Course> createCourse(Course course) async {
     try {
@@ -27,23 +30,12 @@ class CourseSupabaseService implements CourseDataSource {
           .select()
           .single();
       return Course.fromJson(row);
-    } on PostgrestException catch (e) {
-      // Ubah error database menjadi pesan yang mudah dibaca di SnackBar.
-      if (e.code == '23505') {
-        throw Exception('Kode course sudah dipakai');
-      }
-      if (e.code == '23514') {
-        throw Exception('Status harus planned, active, atau done');
-      }
-      if (e.code == '42501') {
-        throw Exception('Tidak punya izin menambah data (cek policy RLS)');
-      }
-      throw Exception('Gagal menambah course: ${e.message}');
+    } catch (e) {
+      throw _mapError(e);
     }
   }
 
-  // TAHAP 14: UPDATE berdasarkan id. select() dipakai agar kita tahu berapa
-  // row yang benar-benar berubah (RLS tanpa izin update = 0 row, tanpa error).
+  // TAHAP 14: UPDATE berdasarkan id. select() agar 0 row (ditolak RLS) terdeteksi.
   @override
   Future<void> updateCourse(int id, Course course) async {
     try {
@@ -55,17 +47,12 @@ class CourseSupabaseService implements CourseDataSource {
       if (rows.isEmpty) {
         throw Exception('Course tidak ditemukan atau tidak boleh diubah');
       }
-    } on PostgrestException catch (e) {
-      if (e.code == '23505') throw Exception('Kode course sudah dipakai');
-      if (e.code == '23514') {
-        throw Exception('Status harus planned, active, atau done');
-      }
-      throw Exception('Gagal memperbarui course: ${e.message}');
+    } catch (e) {
+      throw _mapError(e);
     }
   }
 
-  // TAHAP 15: DELETE berdasarkan id. select() dipakai agar tahu apakah ada
-  // row yang benar-benar terhapus (RLS tanpa izin delete = 0 row, tanpa error).
+  // TAHAP 15: DELETE berdasarkan id. select() agar 0 row (ditolak RLS) terdeteksi.
   @override
   Future<void> deleteCourse(int id) async {
     try {
@@ -74,8 +61,46 @@ class CourseSupabaseService implements CourseDataSource {
       if (rows.isEmpty) {
         throw Exception('Course tidak ditemukan atau tidak boleh dihapus');
       }
-    } on PostgrestException catch (e) {
-      throw Exception('Gagal menghapus course: ${e.message}');
+    } catch (e) {
+      throw _mapError(e);
     }
+  }
+
+  // TAHAP 17: ubah error teknis menjadi pesan yang informatif untuk UI.
+  // Detail teknis hanya dicetak ke console (debug), bukan ke pengguna.
+  Exception _mapError(Object e) {
+    // ignore: avoid_print
+    print('CourseSupabaseService error: $e');
+
+    if (e is PostgrestException) {
+      switch (e.code) {
+        case '23505':
+          return Exception('Kode course sudah dipakai');
+        case '23514':
+          return Exception('Status harus planned, active, atau done');
+        case '42501':
+          return Exception('Akses ditolak oleh policy database (RLS)');
+        case 'PGRST205':
+        case '42P01':
+          return Exception('Tabel courses tidak ditemukan di database');
+        case '42703':
+          return Exception('Kolom yang diminta tidak ada di tabel courses');
+        default:
+          return Exception('Kesalahan database: ${e.message}');
+      }
+    }
+
+    final text = e.toString();
+    if (text.contains('SocketException') ||
+        text.contains('ClientException') ||
+        text.contains('Failed host lookup') ||
+        text.contains('TimeoutException')) {
+      return Exception(
+          'Tidak ada koneksi internet. Periksa jaringan lalu coba lagi.');
+    }
+
+    // Exception buatan sendiri (mis. 0 row terubah) diteruskan apa adanya.
+    if (e is Exception) return e;
+    return Exception('Terjadi kesalahan: $text');
   }
 }
