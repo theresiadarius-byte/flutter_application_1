@@ -12,6 +12,7 @@ class CourseProvider extends ChangeNotifier {
   final Map<String, dynamic> student = {};
   List<Course> courses = [];
   bool isLoading = false;
+  bool isSaving = false; // TAHAP 6: mencegah submit ganda
   String? error;
 
   Future<void> loadCourses() async {
@@ -27,6 +28,24 @@ class CourseProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// TAHAP 6: kirim course baru lalu refresh list (isi list diganti, bukan
+  /// ditambah). Mengembalikan null jika sukses, atau pesan error jika gagal.
+  Future<String?> createCourse(Course course) async {
+    if (isSaving) return 'Penyimpanan sedang berjalan';
+    isSaving = true;
+    notifyListeners();
+    try {
+      await repository.createCourse(course);
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+    await loadCourses();
+    return null;
   }
 
   final Set<String> _favorites = {};

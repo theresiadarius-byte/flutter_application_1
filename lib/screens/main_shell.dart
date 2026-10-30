@@ -4,12 +4,13 @@ import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/error_view.dart';
+import 'course_form_page.dart';
 import 'courses_page.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
-// TAHAP 14 & 5: integrasi Course Explorer v2 + loading/empty/error state
+// TAHAP 14, 5 & 6: integrasi Course Explorer v2 + loading/empty/error state
 // Nama: Theresia Darius | NIM: 2415051116
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -115,6 +116,17 @@ class _MainShellState extends State<MainShell> {
             }),
           ],
         ),
+        // TAHAP 6: tombol tambah hanya di tab Courses
+        floatingActionButton: index == 1
+            ? FloatingActionButton.extended(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CourseFormPage()),
+                ),
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah'),
+              )
+            : null,
         body: wide
             ? Row(children: [
                 NavigationRail(
