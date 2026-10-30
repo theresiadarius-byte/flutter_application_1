@@ -67,6 +67,16 @@ class _MainShellState extends State<MainShell> {
             const Text('$studentId - $studentName',
                 style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 16),
+            // TAHAP 16: tetap bisa menambah data saat tabel masih kosong
+            FilledButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CourseFormPage()),
+              ),
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Course'),
+            ),
+            const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => context.read<CourseProvider>().loadCourses(),
               icon: const Icon(Icons.refresh),
