@@ -7,7 +7,9 @@ class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
   CourseProvider(this.repository);
 
-  Map<String, dynamic> student = {};
+  // Data mahasiswa tidak lagi dibaca dari asset JSON. Halaman Home/Profile
+  // otomatis memakai studentName & studentId dari constants.dart.
+  final Map<String, dynamic> student = {};
   List<Course> courses = [];
   bool isLoading = false;
   String? error;
@@ -17,7 +19,6 @@ class CourseProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      student = await repository.getStudent();
       courses = await repository.getCourses();
       debugPrint('CourseProvider memuat ${courses.length} course');
     } catch (e) {
