@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'main_shell.dart';
+import 'package:provider/provider.dart';
+import '../providers/course_provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -38,6 +40,7 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passC.text,
       );
       if (!mounted) return;
+      context.read<CourseProvider>().loadCourses();
       if (res.session != null) {
         // Konfirmasi email nonaktif: user langsung login -> masuk aplikasi.
         Navigator.of(context).pushAndRemoveUntil(

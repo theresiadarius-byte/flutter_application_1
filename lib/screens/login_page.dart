@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'main_shell.dart';
 import 'register_page.dart';
+import 'package:provider/provider.dart';
+import '../providers/course_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,6 +43,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
       );
+      context.read<CourseProvider>().loadCourses();
     } on AuthException catch (e) {
       // Password salah / email belum terdaftar -> "Invalid login credentials"
       _showMessage(e.message);

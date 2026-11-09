@@ -9,6 +9,8 @@ import 'courses_page.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
+import '../services/auth_service.dart';
+import 'login_page.dart';
 
 // TAHAP 14, 5 & 6: integrasi Course Explorer v2 + loading/empty/error state
 // Nama: Theresia Darius | NIM: 2415051116
@@ -124,6 +126,18 @@ class _MainShellState extends State<MainShell> {
                 ]),
               );
             }),
+            IconButton(
+                tooltip: 'Logout',
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                    await AuthService.instance.logout(); // Session Removed
+                    if (!context.mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  },
+),
           ],
         ),
         // TAHAP 6: tombol tambah hanya di tab Courses
