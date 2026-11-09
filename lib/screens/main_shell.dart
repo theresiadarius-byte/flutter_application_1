@@ -11,6 +11,7 @@ import 'home_page.dart';
 import 'profile_page.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
+import '../services/profile_service.dart';
 
 // TAHAP 14, 5 & 6: integrasi Course Explorer v2 + loading/empty/error state
 // Nama: Theresia Darius | NIM: 2415051116
@@ -22,6 +23,23 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int index = 0;
+
+  UserProfile? _profile;
+
+@override
+void initState() {
+  super.initState();
+  _loadProfile();
+}
+
+Future<void> _loadProfile() async {
+  try {
+    final p = await ProfileService().getMyProfile();
+    if (mounted) setState(() => _profile = p);
+  } catch (_) {
+    // profil gagal dimuat: tampilan tetap jalan tanpa info role
+  }
+}
 
   static const _items = [
     (Icons.home_outlined, Icons.home, 'Home'),
@@ -94,7 +112,7 @@ class _MainShellState extends State<MainShell> {
       HomePage(student: student, courses: courses),
       CoursesPage(courses: courses),
       FavoritesPage(courses: courses),
-      ProfilePage(student: student),
+      ProfilePage(student: student, profile: _profile),
     ];
 
     return LayoutBuilder(builder: (context, c) {
