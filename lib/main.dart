@@ -4,23 +4,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/main_shell.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 import 'supabase_config.dart';
+import 'screens/login_page.dart';
 
 // Nama: Theresia Darius
 // NIM: 2415051116 | Kelas: PTI 5 A
 
-// TAHAP 10: Supabase diinisialisasi sebelum runApp().
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
-  // service -> repository -> provider
-  // TAHAP 9: hanya baris dataSource ini yang berubah saat ganti sumber data.
-  // TAHAP 12: data source aktif = Supabase.
-  // (Untuk REST: CourseApiService(apiBaseUrl) dari services/course_api_service.dart)
   final CourseDataSource dataSource = CourseSupabaseService();
   final repository = CourseRepository(dataSource);
 
@@ -28,6 +23,7 @@ Future<void> main() async {
     ChangeNotifierProvider(
       create: (_) => CourseProvider(repository)..loadCourses(),
       child: const MyApp(),
+      
     ),
   );
 }
@@ -41,7 +37,7 @@ class MyApp extends StatelessWidget {
       title: 'Course Explorer',
       debugShowCheckedModeBanner: true,
       theme: ThemeData(useMaterial3: true),
-      home: const MainShell(),
+      home: const LoginPage(),
     );
   }
 }

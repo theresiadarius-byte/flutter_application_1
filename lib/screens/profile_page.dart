@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../widgets/feedback_form.dart';
+import '../services/auth_service.dart';
 
 class ProfilePage extends StatelessWidget {
   final Map<String, dynamic> student;
@@ -33,6 +34,11 @@ class ProfilePage extends StatelessWidget {
                 leading: Icon(Icons.apartment, color: Colors.indigo),
                 title: Text('Fakultas'),
                 subtitle: Text('Fakultas Teknik dan Kejuruan')),
+            ListTile(
+                leading: const Icon(Icons.email, color: Colors.indigo),
+                title: const Text('Login sebagai'),
+                subtitle: Text(AuthService.instance.currentUser?.email ?? '-'),
+              ),
           ]),
         ),
       ),
