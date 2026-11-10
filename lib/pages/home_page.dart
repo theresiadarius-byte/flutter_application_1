@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../security_test.dart';
 import '../services/auth_service.dart';
 import '../services/kos_service.dart';
+import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/role_guard.dart';
 import 'kos_detail_page.dart';
@@ -19,11 +21,27 @@ class _HomePageState extends State<HomePage> {
   late Future<UserProfile?> _profileFuture;
   late Future<List<Map<String, dynamic>>> _kosFuture;
   final KosService _kosService = KosService();
+  AuthorizationStatus? _notificationStatus;
+  String? _fcmToken;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _initNotifications();
+  }
+
+  Future<void> _initNotifications() async {
+    // Memanggil NotificationService.instance.init() (Praktik 10)
+    await NotificationService.instance.init();
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    final token = await NotificationService.instance.getToken();
+    if (mounted) {
+      setState(() {
+        _notificationStatus = settings.authorizationStatus;
+        _fcmToken = token;
+      });
+    }
   }
 
   void _loadData() {
@@ -375,6 +393,78 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+
+                // Card Status Izin Notifikasi (Praktik 8)
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  elevation: 0,
+                  color: _notificationStatus == AuthorizationStatus.authorized
+                      ? Colors.green.shade50
+                      : (_notificationStatus == AuthorizationStatus.denied
+                          ? Colors.red.shade50
+                          : Colors.amber.shade50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: _notificationStatus == AuthorizationStatus.authorized
+                          ? Colors.green.shade300
+                          : (_notificationStatus == AuthorizationStatus.denied
+                              ? Colors.red.shade300
+                              : Colors.amber.shade300),
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      _notificationStatus == AuthorizationStatus.authorized
+                          ? Icons.notifications_active
+                          : (_notificationStatus == AuthorizationStatus.denied
+                              ? Icons.notifications_off
+                              : Icons.notification_important),
+                      color: _notificationStatus == AuthorizationStatus.authorized
+                          ? Colors.green
+                          : (_notificationStatus == AuthorizationStatus.denied
+                              ? Colors.red
+                              : Colors.amber.shade800),
+                      size: 32,
+                    ),
+                    title: const Text(
+                      'Izin Notifikasi & FCM Token',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Status: ${_notificationStatus?.name.toUpperCase() ?? "MEMERIKSA..."}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: _notificationStatus == AuthorizationStatus.authorized
+                                ? Colors.green.shade700
+                                : (_notificationStatus == AuthorizationStatus.denied
+                                    ? Colors.red.shade700
+                                    : Colors.amber.shade900),
+                          ),
+                        ),
+                        if (_fcmToken != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'FCM Token: ${_fcmToken!.length > 20 ? "${_fcmToken!.substring(0, 12)}...${_fcmToken!.substring(_fcmToken!.length - 6)}" : _fcmToken!}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Refresh Status',
+                      onPressed: _initNotifications,
+                    ),
                   ),
                 ),
 

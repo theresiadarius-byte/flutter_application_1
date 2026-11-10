@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_keys.dart';
@@ -6,22 +7,26 @@ import 'firebase_options.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Firebase SEBELUM Supabase
+  // 1. Inisialisasi Firebase SEBELUM Supabase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Inisialisasi Supabase
+  // 2. Daftarkan background message handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // 3. Inisialisasi Supabase
   await Supabase.initialize(
     url: AppKeys.supabaseUrl,
     anonKey: AppKeys.supabaseAnonKey,
   );
 
-  // Mendengarkan perubahan session auth: jika logout/signedOut otomatis kembali ke LoginPage
+  // 4. Mendengarkan perubahan session auth: jika logout/signedOut otomatis kembali ke LoginPage
   Supabase.instance.client.auth.onAuthStateChange.listen((data) {
     debugPrint('Auth event: ${data.event}');
     if (data.event == AuthChangeEvent.signedOut) {
