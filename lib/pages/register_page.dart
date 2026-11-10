@@ -12,13 +12,16 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameC = TextEditingController();
   final _emailC = TextEditingController();
   final _passC = TextEditingController();
   final _confirmC = TextEditingController();
+  String _role = 'seeker';
   bool _loading = false;
 
   @override
   void dispose() {
+    _nameC.dispose();
     _emailC.dispose();
     _passC.dispose();
     _confirmC.dispose();
@@ -36,6 +39,8 @@ class _RegisterPageState extends State<RegisterPage> {
       final res = await AuthService.instance.register(
         email: _emailC.text.trim(),
         password: _passC.text,
+        name: _nameC.text.trim(),
+        role: _role,
       );
       if (!mounted) return;
       if (res.session != null) {
@@ -68,6 +73,29 @@ class _RegisterPageState extends State<RegisterPage> {
           key: _formKey,
           child: ListView(
             children: [
+              TextFormField(
+                controller: _nameC,
+                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _role,
+                decoration: const InputDecoration(labelText: 'Daftar sebagai'),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'seeker',
+                    child: Text('Pencari Kos'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'owner',
+                    child: Text('Pemilik Kos'),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _role = v ?? 'seeker'),
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _emailC,
                 keyboardType: TextInputType.emailAddress,
