@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_keys.dart';
+import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,6 +11,18 @@ Future<void> main() async {
     url: AppKeys.supabaseUrl,
     anonKey: AppKeys.supabaseAnonKey,
   );
+
+  // Mendengarkan perubahan session auth: jika logout/signedOut otomatis kembali ke LoginPage
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    debugPrint('Auth event: ${data.event}');
+    if (data.event == AuthChangeEvent.signedOut) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
+  });
+
   runApp(const KosFinderApp());
 }
 
@@ -24,7 +38,12 @@ class KosFinderApp extends StatelessWidget {
         colorSchemeSeed: Colors.indigo,
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      navigatorKey: navigatorKey,
+      scaffoldMessengerKey: messengerKey,
+      // Check Session: jika session tersimpan tampilkan HomePage, jika tidak ke LoginPage
+      home: AuthService.instance.isLoggedIn
+          ? const HomePage()
+          : const LoginPage(),
     );
   }
 }
