@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'screens/login_page.dart';
-import 'supabase_config.dart';
-
-// Nama: Theresia Darius
-// NIM: 2415051116 | Kelas: PTI 5 A
+import 'app_keys.dart';
+import 'pages/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-
+  await Supabase.initialize(
+    url: AppKeys.supabaseUrl,
+    anonKey: AppKeys.supabaseAnonKey,
+  );
   runApp(const KosFinderApp());
 }
 
@@ -22,7 +19,11 @@ class KosFinderApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'KosFinder',
-      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorSchemeSeed: Colors.indigo,
+        useMaterial3: true,
+      ),
       home: const LoginPage(),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../services/auth_service.dart';
 import 'home_page.dart';
 
@@ -62,7 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Register KosFinder')),
+      appBar: AppBar(title: const Text('Register')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -94,9 +93,8 @@ class _RegisterPageState extends State<RegisterPage> {
               TextFormField(
                 controller: _confirmC,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Konfirmasi Password',
-                ),
+                decoration:
+                    const InputDecoration(labelText: 'Konfirmasi Password'),
                 validator: (v) =>
                     v != _passC.text ? 'Password tidak sama' : null,
               ),

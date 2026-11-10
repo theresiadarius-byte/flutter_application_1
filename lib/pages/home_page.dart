@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
@@ -10,7 +9,9 @@ class HomePage extends StatelessWidget {
     final user = AuthService.instance.currentUser;
     return Scaffold(
       appBar: AppBar(title: const Text('KosFinder')),
-      body: Center(child: Text('Login sebagai: ${user?.email ?? '-'}')),
+      body: Center(
+        child: Text('Login sebagai: ${user?.email ?? '-'}'),
+      ),
     );
   }
 }

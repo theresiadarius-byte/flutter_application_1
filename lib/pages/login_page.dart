@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../services/auth_service.dart';
 import 'home_page.dart';
 import 'register_page.dart';
@@ -90,9 +89,9 @@ class _LoginPageState extends State<LoginPage> {
                     : const Text('Login'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const RegisterPage())),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RegisterPage()),
+                ),
                 child: const Text('Belum punya akun? Register'),
               ),
             ],
